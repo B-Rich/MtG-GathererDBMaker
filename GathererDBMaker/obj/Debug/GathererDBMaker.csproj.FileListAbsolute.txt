@@ -1,0 +1,6 @@
+c:\users\jeremy\documents\visual studio 2012\Projects\GathererDBMaker\GathererDBMaker\bin\Debug\GathererDBMaker.exe.config
+c:\users\jeremy\documents\visual studio 2012\Projects\GathererDBMaker\GathererDBMaker\bin\Debug\GathererDBMaker.exe
+c:\users\jeremy\documents\visual studio 2012\Projects\GathererDBMaker\GathererDBMaker\bin\Debug\GathererDBMaker.pdb
+c:\users\jeremy\documents\visual studio 2012\Projects\GathererDBMaker\GathererDBMaker\obj\Debug\GathererDBMaker.csprojResolveAssemblyReference.cache
+c:\users\jeremy\documents\visual studio 2012\Projects\GathererDBMaker\GathererDBMaker\obj\Debug\GathererDBMaker.exe
+c:\users\jeremy\documents\visual studio 2012\Projects\GathererDBMaker\GathererDBMaker\obj\Debug\GathererDBMaker.pdb
