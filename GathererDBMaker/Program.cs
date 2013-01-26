@@ -21,29 +21,41 @@ namespace GathererDBMaker
                 using (StreamReader reader = new StreamReader(request.GetResponse().GetResponseStream()))
                 {
                     string source = reader.ReadToEnd();
-                    getName(source); 
+                    getInfo(source); 
 
                 }
             }
         }
-        static void getName(string source)
+        static void getInfo(string source)
         {
-            int titlestart = source.IndexOf("<title>") + 7;
-            int titleend = source.IndexOf("</title>") - 1;
-
-            string name = source.Substring(titlestart, (titleend - titlestart));
-            name = name.Substring(0, name.IndexOf("-"));
-
-            name = name.Replace("\n", string.Empty);
-            name = name.Replace("\r", string.Empty);
-            name = name.Replace("\t", string.Empty);
-
-            if (name.Contains("(") == true)
+            if (source.Contains("id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardImage\""))
             {
+                int titlestart = source.IndexOf("<title>") + 7;
+                int titleend = source.IndexOf("</title>") - 1;
+
+                string name = source.Substring(titlestart, (titleend - titlestart));
+                string convmanacost = null;
+                string type = null;
+                string cardtext = null;
+                string expansion = null;
+                string rarity = null;
+
+                //Gets card name from web page source and removes the linebreaks and tabs
+                name = name.Substring(0, name.IndexOf(" - Gatherer - Magic: The Gathering"));
+                name = name.Replace("\n", string.Empty);
+                name = name.Replace("\r", string.Empty);
+                name = name.Replace("\t", string.Empty);
+
+                //If the title contains parenthesis it cuts it out and puts what was inside into expansion
+                if (name.Contains("(") == true)
+                {
+                    expansion = name.Substring(name.IndexOf("(")+1, (name.IndexOf(")") - name.IndexOf("("))-1);
+                    name = name.Substring(0, name.IndexOf("("));
+                }
+
+                Console.WriteLine(name + "\n\tExpansion: " + expansion);
 
             }
-
-            Console.WriteLine(name);
         }
     }
 }
