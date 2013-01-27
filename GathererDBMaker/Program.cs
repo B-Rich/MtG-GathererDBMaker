@@ -42,7 +42,6 @@ namespace GathererDBMaker
                 //Gets card name from web page source and removes the linebreaks and tabs
                 int titlestart = source.IndexOf("<title>") + 7;
                 int titleend = source.IndexOf("</title>") - 1;
-
                 name = source.Substring(titlestart, (titleend - titlestart));
                 name = name.Substring(0, name.IndexOf(" - Gatherer - Magic: The Gathering"));
                 name = name.Replace("\n", string.Empty);
@@ -53,7 +52,6 @@ namespace GathererDBMaker
                 //Gets the card's type
                 int typestart = source.IndexOf("Types:</div>");
                 int typeend = source.IndexOf("</div>", (typestart +15));
-
                 type = source.Substring(typestart, (typeend - typestart));
                 type = type.Substring(type.IndexOf(">", 15), (type.Length - type.IndexOf(">", 15)));
                 type = type.Replace("\n", string.Empty);
@@ -62,7 +60,22 @@ namespace GathererDBMaker
                 type = type.Replace(">", string.Empty);
                 type = type.Trim();
 
-                
+                //Gets the card's image
+                /*int imgstart = source.IndexOf("<td class=\"leftCol\" align=\"center\">");
+                int imgend = source.IndexOf("/>", imgstart);
+                imgurl = source.Substring(imgstart, (imgend - imgstart));
+                 */
+
+                //imgurl = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + i + "&type=card";
+                imgurl = imgurl.Replace("../../", "http://gatherer.wizards.com/");
+                imgurl = imgurl.Replace("amp;", string.Empty);
+
+                //Gets the Cards Rarity
+                int raritystart = source.IndexOf("Rarity:</div>");
+                int rarityend = source.IndexOf("</span>", raritystart);
+                rarity = source.Substring(raritystart, (rarityend - raritystart));
+                rarity = rarity.Substring(rarity.IndexOf("'>") + 2, (rarity.Length - rarity.IndexOf("'>")) - 2);
+                rarity = rarity.Trim();
 
                 //If the title contains parenthesis it cuts it out and puts what was inside into expansion
                 if (name.Contains("(") == true)
@@ -71,7 +84,7 @@ namespace GathererDBMaker
                     name = name.Substring(0, name.IndexOf("("));
                 }
 
-                Console.WriteLine(name + "\n\tType: " + type + "\n\tExpansion: " + expansion);
+                Console.WriteLine(name + "\n\tType: " + type + "\n\tExpansion: " + expansion + "\n\tRarity: " + rarity);
 
             }
         }
