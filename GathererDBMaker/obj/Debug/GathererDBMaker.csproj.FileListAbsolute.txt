@@ -10,3 +10,5 @@ C:\Users\Jeremy\Documents\Git\GathererDBMaker\GathererDBMaker\obj\Debug\Gatherer
 C:\Users\Jeremy\Documents\Git\GathererDBMaker\GathererDBMaker\bin\Debug\GathererDBMaker.exe
 C:\Users\Jeremy\Documents\Git\GathererDBMaker\GathererDBMaker\bin\Debug\GathererDBMaker.pdb
 C:\Users\Jeremy\Documents\Git\GathererDBMaker\GathererDBMaker\obj\Debug\GathererDBMaker.csprojResolveAssemblyReference.cache
+C:\Users\Jeremy\Documents\Git\GathererDBMaker\GathererDBMaker\obj\Debug\Interop.ADOX.dll
+C:\Users\Jeremy\Documents\Git\GathererDBMaker\GathererDBMaker\obj\Debug\GathererDBMaker.csproj.ResolveComReference.cache
