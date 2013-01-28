@@ -13,31 +13,39 @@ namespace GathererDBMaker
     {
         static void Main(string[] args)
         {
-           
+
             Console.WriteLine(@"Please enter the path and name for the new database. (Example: C:\Users\w9jds\Desktop\GathererDB.mdb)");
             string input = Console.ReadLine();
 
             ADOX.Catalog CreateDB = new ADOX.Catalog();
-            ADOX.Table DBTable = new ADOX.Table();
+            ADOX.Table CardTable = new ADOX.Table();
+            ADOX.Table Legality = new ADOX.Table();
+            
+            CardTable.Name = "Cards";
+            CardTable.Columns.Append("MultiverseID");
+            CardTable.Columns.Append("Name");
+            CardTable.Columns.Append("ConvManaCost");
+            CardTable.Columns.Append("Type");
+            CardTable.Columns.Append("CardText");
+            CardTable.Columns.Append("Power");
+            CardTable.Columns.Append("Toughness");
+            CardTable.Columns.Append("Expansion");
+            CardTable.Columns.Append("Rarity");
+            CardTable.Columns.Append("ImgURL");
 
-            DBTable.Name = "CardTable";
-            DBTable.Columns.Append("MultiverseID");
-            DBTable.Columns.Append("Name");
-            DBTable.Columns.Append("ConvManaCost");
-            DBTable.Columns.Append("Type");
-            DBTable.Columns.Append("CardText");
-            DBTable.Columns.Append("Expansion");
-            DBTable.Columns.Append("Rarity");
-            DBTable.Columns.Append("ImgURL");
+            Legality.Name = "CardLegality";
+            Legality.Columns.Append("MultiverseID");
+
 
             CreateDB.Create("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" + input + "; Jet OLEDB:Engine Type=5");
-            CreateDB.Tables.Append(DBTable);
+            CreateDB.Tables.Append(CardTable);
+            CreateDB.Tables.Append(Legality);
 
             OleDbConnection DBcon = CreateDB.ActiveConnection as OleDbConnection;
             if (DBcon != null)
                 DBcon.Close();
 
-            for (int i = 1; i <= 1000; i++)
+            for (int i = 1; i <= 1500; i++)
             {
                 WebRequest request = HttpWebRequest.Create("http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=" + i);
                 request.Method = "GET";
@@ -58,6 +66,8 @@ namespace GathererDBMaker
                 string convmanacost = "";
                 string type = null;
                 string cardtext = "";
+                string power = "";
+                string toughness = "";
                 string expansion = null;
                 string rarity = null;
                 string imgurl = "";
@@ -76,11 +86,10 @@ namespace GathererDBMaker
                 int typestart = source.IndexOf("Types:</div>");
                 int typeend = source.IndexOf("</div>", (typestart +15));
                 type = source.Substring(typestart, (typeend - typestart));
-                type = type.Substring(type.IndexOf(">", 15), (type.Length - type.IndexOf(">", 15)));
+                type = type.Substring((type.IndexOf(">", 15) + 1), (type.Length - (type.IndexOf(">", 15) + 1)));
                 type = type.Replace("\n", string.Empty);
                 type = type.Replace("\r", string.Empty);
                 type = type.Replace("\t", string.Empty);
-                type = type.Replace(">", string.Empty);
                 type = type.Trim();
 
                 //Gets the card's image
@@ -88,6 +97,21 @@ namespace GathererDBMaker
                 /*int imgstart = source.IndexOf("<td class=\"leftCol\" align=\"center\">");
                 int imgend = source.IndexOf("/>", imgstart);
                 imgurl = source.Substring(imgstart, (imgend - imgstart));*/
+
+                if (source.Contains("P/T:</div>") == true)
+                {
+                    int PTstart = source.IndexOf("P/T:</div>");
+                    int PTend = source.IndexOf("</div>", PTstart + 10);
+                    string PT = source.Substring(PTstart, (PTend - PTstart));
+                    PT = PT.Substring((PT.IndexOf("\">") + 2), (PT.Length - (PT.IndexOf("\">")+2)));
+                    PT = PT.Replace("\n", string.Empty);
+                    PT = PT.Replace("\r", string.Empty);
+                    PT = PT.Replace("\t", string.Empty);
+                    PT = PT.Replace(" ", string.Empty);
+                    string[] PTsplit = PT.Split('/');
+                    power = PTsplit[0];
+                    toughness = PTsplit[1];
+                }
 
                 //Gets the Cards Rarity
                 int raritystart = source.IndexOf("Rarity:</div>");
@@ -101,18 +125,21 @@ namespace GathererDBMaker
                 {
                     expansion = name.Substring(name.IndexOf("(")+1, (name.IndexOf(")") - name.IndexOf("("))-1);
                     name = name.Substring(0, name.IndexOf("("));
+                    name.Trim();
                 }
 
                 OleDbConnection DBcon = new OleDbConnection(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + DBPath);
                 DBcon.Open(); //opens OLEBD connection to Database
                 OleDbCommand cmd = new OleDbCommand();
-                cmd.CommandText = "INSERT INTO CardTable([MultiverseID], [Name], [ConvManaCost], [Type], [CardText], [Expansion], [Rarity], [ImgURL]) VALUES (@MultiverseID, @Name, @ConvManaCost, @Type, @CardText, @Expansion, @Rarity, @ImgURL)";
+                cmd.CommandText = "INSERT INTO CardTable([MultiverseID], [Name], [ConvManaCost], [Type], [CardText], [Power], [Toughness], [Expansion], [Rarity], [ImgURL]) VALUES (@MultiverseID, @Name, @ConvManaCost, @Type, @CardText, @Power, @Toughness, @Expansion, @Rarity, @ImgURL)";
                 //Adds a new card and all the information for it to the CardTable
                 cmd.Parameters.Add("@MultiverseID", OleDbType.VarChar).Value = multiverseid;
                 cmd.Parameters.Add("@Name", OleDbType.VarChar).Value = name;
                 cmd.Parameters.Add("@ConvManaCost", OleDbType.VarChar).Value = convmanacost;
                 cmd.Parameters.Add("@Type", OleDbType.VarChar).Value = type;
                 cmd.Parameters.Add("@CardText", OleDbType.VarChar).Value = cardtext;
+                cmd.Parameters.Add("@Power", OleDbType.VarChar).Value = power;
+                cmd.Parameters.Add("@Toughness", OleDbType.VarChar).Value = toughness;
                 cmd.Parameters.Add("@Expansion", OleDbType.VarChar).Value = expansion;
                 cmd.Parameters.Add("@Rarity", OleDbType.VarChar).Value = rarity;
                 cmd.Parameters.Add("@ImgURL", OleDbType.VarChar).Value = imgurl;
