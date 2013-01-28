@@ -55,12 +55,12 @@ namespace GathererDBMaker
             {
                 int multiverseid = i;
                 string name = null;
-                string convmanacost = null;
+                string convmanacost = "";
                 string type = null;
-                string cardtext = null;
+                string cardtext = "";
                 string expansion = null;
                 string rarity = null;
-                string imgurl = null;
+                string imgurl = "";
 
                 //Gets card name from web page source and removes the linebreaks and tabs
                 int titlestart = source.IndexOf("<title>") + 7;
@@ -84,14 +84,10 @@ namespace GathererDBMaker
                 type = type.Trim();
 
                 //Gets the card's image
+                imgurl = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + i + "&type=card";
                 /*int imgstart = source.IndexOf("<td class=\"leftCol\" align=\"center\">");
                 int imgend = source.IndexOf("/>", imgstart);
-                imgurl = source.Substring(imgstart, (imgend - imgstart));
-                 */
-
-                //imgurl = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + i + "&type=card";
-                //imgurl = imgurl.Replace("../../", "http://gatherer.wizards.com/");
-                //imgurl = imgurl.Replace("amp;", string.Empty);
+                imgurl = source.Substring(imgstart, (imgend - imgstart));*/
 
                 //Gets the Cards Rarity
                 int raritystart = source.IndexOf("Rarity:</div>");
@@ -110,7 +106,7 @@ namespace GathererDBMaker
                 OleDbConnection DBcon = new OleDbConnection(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + DBPath);
                 DBcon.Open(); //opens OLEBD connection to Database
                 OleDbCommand cmd = new OleDbCommand();
-                cmd.CommandText = "INSERT INTO Documents([MultiverseID], [Name], [ConvManaCost], [Type], [CardText], [Expansion], [Rarity], [ImgURL]) VALUES (@MultiverseID, @Name, @ConvManaCost, @Type, @CardText, @Expansion, @Rarity, @ImgURL)";
+                cmd.CommandText = "INSERT INTO CardTable([MultiverseID], [Name], [ConvManaCost], [Type], [CardText], [Expansion], [Rarity], [ImgURL]) VALUES (@MultiverseID, @Name, @ConvManaCost, @Type, @CardText, @Expansion, @Rarity, @ImgURL)";
                 //Adds a new card and all the information for it to the CardTable
                 cmd.Parameters.Add("@MultiverseID", OleDbType.VarChar).Value = multiverseid;
                 cmd.Parameters.Add("@Name", OleDbType.VarChar).Value = name;
@@ -122,8 +118,9 @@ namespace GathererDBMaker
                 cmd.Parameters.Add("@ImgURL", OleDbType.VarChar).Value = imgurl;
                 cmd.Connection = DBcon;
                 cmd.ExecuteNonQuery();
+                DBcon.Close();
 
-                Console.WriteLine(name + "\n\tType: " + type + "\n\tExpansion: " + expansion + "\n\tRarity: " + rarity);
+                Console.WriteLine(name + "was added to the database.");
             }
         }
     }
