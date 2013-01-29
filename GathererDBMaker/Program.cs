@@ -11,16 +11,15 @@ namespace GathererDBMaker
 {
     class Program
     {
-        static void Main(string[] args)
+        static string mkDatabase()
         {
-
-            Console.WriteLine(@"Please enter the path and name for the new database. (Example: C:\Users\w9jds\Desktop\GathererDB.mdb)");
+            Console.WriteLine("Enter the path/name for the new database. \nExample: C:\\Users\\w9jds\\Desktop\\GathererDB.mdb");
             string input = Console.ReadLine();
 
             ADOX.Catalog CreateDB = new ADOX.Catalog();
             ADOX.Table CardTable = new ADOX.Table();
             ADOX.Table Legality = new ADOX.Table();
-            
+
             CardTable.Name = "Cards";
             CardTable.Columns.Append("MultiverseID");
             CardTable.Columns.Append("Name");
@@ -33,9 +32,10 @@ namespace GathererDBMaker
             CardTable.Columns.Append("Rarity");
             CardTable.Columns.Append("ImgURL");
 
-            Legality.Name = "CardLegality";
+            Legality.Name = "CardsLegality";
             Legality.Columns.Append("MultiverseID");
-
+            Legality.Columns.Append("Format");
+            Legality.Columns.Append("Legality");
 
             CreateDB.Create("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" + input + "; Jet OLEDB:Engine Type=5");
             CreateDB.Tables.Append(CardTable);
@@ -45,6 +45,13 @@ namespace GathererDBMaker
             if (DBcon != null)
                 DBcon.Close();
 
+            return input;
+        }
+        
+        static void Main(string[] args)
+        {
+            string input = mkDatabase();
+
             for (int i = 1; i <= 1500; i++)
             {
                 WebRequest request = HttpWebRequest.Create("http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=" + i);
@@ -53,10 +60,10 @@ namespace GathererDBMaker
                 {
                     string source = reader.ReadToEnd();
                     getInfo(source, i, input); 
-
                 }
             }
         }
+        
         static void getInfo(string source, int i, string DBPath)
         {
             if (source.Contains("id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardImage\""))
@@ -81,6 +88,18 @@ namespace GathererDBMaker
                 name = name.Replace("\r", string.Empty);
                 name = name.Replace("\t", string.Empty);
                 name = name.Trim();
+
+                if (source.Contains("Converted Mana Cost:</div>") == true)
+                {
+                    int manacoststart = source.IndexOf("Converted Mana Cost:</div>");
+                    int manacostend = source.IndexOf("<br />", manacoststart);
+                    convmanacost = source.Substring(manacoststart, (manacostend - manacoststart));
+                    convmanacost = convmanacost.Substring((convmanacost.IndexOf("\">") + 2), (convmanacost.Length - (convmanacost.IndexOf("\">") + 2)));
+                    convmanacost = convmanacost.Replace("\n", string.Empty);
+                    convmanacost = convmanacost.Replace("\r", string.Empty);
+                    convmanacost = convmanacost.Replace("\t", string.Empty);
+                    convmanacost = convmanacost.Trim();
+                }
 
                 //Gets the card's type
                 int typestart = source.IndexOf("Types:</div>");
@@ -128,27 +147,39 @@ namespace GathererDBMaker
                     name.Trim();
                 }
 
-                OleDbConnection DBcon = new OleDbConnection(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + DBPath);
-                DBcon.Open(); //opens OLEBD connection to Database
-                OleDbCommand cmd = new OleDbCommand();
-                cmd.CommandText = "INSERT INTO CardTable([MultiverseID], [Name], [ConvManaCost], [Type], [CardText], [Power], [Toughness], [Expansion], [Rarity], [ImgURL]) VALUES (@MultiverseID, @Name, @ConvManaCost, @Type, @CardText, @Power, @Toughness, @Expansion, @Rarity, @ImgURL)";
-                //Adds a new card and all the information for it to the CardTable
-                cmd.Parameters.Add("@MultiverseID", OleDbType.VarChar).Value = multiverseid;
-                cmd.Parameters.Add("@Name", OleDbType.VarChar).Value = name;
-                cmd.Parameters.Add("@ConvManaCost", OleDbType.VarChar).Value = convmanacost;
-                cmd.Parameters.Add("@Type", OleDbType.VarChar).Value = type;
-                cmd.Parameters.Add("@CardText", OleDbType.VarChar).Value = cardtext;
-                cmd.Parameters.Add("@Power", OleDbType.VarChar).Value = power;
-                cmd.Parameters.Add("@Toughness", OleDbType.VarChar).Value = toughness;
-                cmd.Parameters.Add("@Expansion", OleDbType.VarChar).Value = expansion;
-                cmd.Parameters.Add("@Rarity", OleDbType.VarChar).Value = rarity;
-                cmd.Parameters.Add("@ImgURL", OleDbType.VarChar).Value = imgurl;
-                cmd.Connection = DBcon;
-                cmd.ExecuteNonQuery();
-                DBcon.Close();
+                saveCard(DBPath, multiverseid, name, convmanacost, type, cardtext, power, toughness, expansion, rarity, imgurl);
 
                 Console.WriteLine(name + "was added to the database.");
             }
         }
+        
+        static void saveCard(string DBPath, int multiverseid, string name, string convmanacost, string type, string cardtext, string power, string toughness, string expansion, string rarity, string imgurl)
+        {
+            OleDbConnection DBcon = new OleDbConnection(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + DBPath);
+            DBcon.Open(); //opens OLEBD connection to Database
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.CommandText = "INSERT INTO Cards([MultiverseID], [Name], [ConvManaCost], [Type], [CardText], [Power], [Toughness], [Expansion], [Rarity], [ImgURL]) VALUES (@MultiverseID, @Name, @ConvManaCost, @Type, @CardText, @Power, @Toughness, @Expansion, @Rarity, @ImgURL)";
+            //Adds a new card and all the information for it to the CardTable
+            cmd.Parameters.Add("@MultiverseID", OleDbType.VarChar).Value = multiverseid;
+            cmd.Parameters.Add("@Name", OleDbType.VarChar).Value = name;
+            cmd.Parameters.Add("@ConvManaCost", OleDbType.VarChar).Value = convmanacost;
+            cmd.Parameters.Add("@Type", OleDbType.VarChar).Value = type;
+            cmd.Parameters.Add("@CardText", OleDbType.VarChar).Value = cardtext;
+            cmd.Parameters.Add("@Power", OleDbType.VarChar).Value = power;
+            cmd.Parameters.Add("@Toughness", OleDbType.VarChar).Value = toughness;
+            cmd.Parameters.Add("@Expansion", OleDbType.VarChar).Value = expansion;
+            cmd.Parameters.Add("@Rarity", OleDbType.VarChar).Value = rarity;
+            cmd.Parameters.Add("@ImgURL", OleDbType.VarChar).Value = imgurl;
+            cmd.Connection = DBcon;
+            cmd.ExecuteNonQuery();
+            DBcon.Close();
+        }
+
+        public void saveLegality()
+        {
+
+        }
     }
+
+
 }
