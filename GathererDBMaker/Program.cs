@@ -13,44 +13,52 @@ namespace GathererDBMaker
     {
         static string mkDatabase()
         {
-            Console.WriteLine("Enter the path/name for the new database. \nExample: C:\\Users\\w9jds\\Desktop\\GathererDB.mdb");
-            string input = Console.ReadLine();
+            try
+            {
+                Console.WriteLine("Enter the path/name for the new database. \nExample: C:\\Users\\w9jds\\Desktop\\GathererDB.mdb");
+                string input = Console.ReadLine();
 
-            ADOX.Catalog CreateDB = new ADOX.Catalog();
-            ADOX.Table CardTable = new ADOX.Table();
-            ADOX.Table Legality = new ADOX.Table();
+                ADOX.Catalog CreateDB = new ADOX.Catalog();
+                ADOX.Table CardTable = new ADOX.Table();
+                ADOX.Table Legality = new ADOX.Table();
 
-            CardTable.Name = "Cards";
-            CardTable.Columns.Append("MultiverseID");
-            CardTable.Columns.Append("Name");
-            CardTable.Columns.Append("ConvManaCost");
-            CardTable.Columns.Append("Type");
-            CardTable.Columns.Append("CardText");
-            CardTable.Columns.Append("Power");
-            CardTable.Columns.Append("Toughness");
-            CardTable.Columns.Append("Expansion");
-            CardTable.Columns.Append("Rarity");
-            CardTable.Columns.Append("ImgURL");
+                CardTable.Name = "Cards";
+                CardTable.Columns.Append("MultiverseID");
+                CardTable.Columns.Append("Name");
+                CardTable.Columns.Append("ConvManaCost");
+                CardTable.Columns.Append("Type");
+                CardTable.Columns.Append("CardText");
+                CardTable.Columns.Append("Power");
+                CardTable.Columns.Append("Toughness");
+                CardTable.Columns.Append("Expansion");
+                CardTable.Columns.Append("Rarity");
+                CardTable.Columns.Append("ImgURL");
 
-            Legality.Name = "CardsLegality";
-            Legality.Columns.Append("MultiverseID");
-            Legality.Columns.Append("Format");
-            Legality.Columns.Append("Legality");
+                Legality.Name = "CardsLegality";
+                Legality.Columns.Append("MultiverseID");
+                Legality.Columns.Append("Format");
+                Legality.Columns.Append("Legality");
 
-            CreateDB.Create("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" + input + "; Jet OLEDB:Engine Type=5");
-            CreateDB.Tables.Append(CardTable);
-            CreateDB.Tables.Append(Legality);
+                CreateDB.Create("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" + input + "; Jet OLEDB:Engine Type=5");
+                CreateDB.Tables.Append(CardTable);
+                CreateDB.Tables.Append(Legality);
 
-            OleDbConnection DBcon = CreateDB.ActiveConnection as OleDbConnection;
-            if (DBcon != null)
-                DBcon.Close();
+                OleDbConnection DBcon = CreateDB.ActiveConnection as OleDbConnection;
+                if (DBcon != null)
+                    DBcon.Close();
 
-            return input;
+                return input;
+            }
+            catch (OleDbException) { Console.WriteLine("Entered Invalid Path"); return null; }
+            catch (Exception) { Console.WriteLine("\nAn error has occured while making the Database"); return null; }
         }
         
         static void Main(string[] args)
         {
-            string input = mkDatabase();
+            begin: string input = mkDatabase();
+
+            if (input == null)
+                goto begin;
 
             for (int i = 1; i <= 1500; i++)
             {
