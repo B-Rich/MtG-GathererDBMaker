@@ -11,17 +11,20 @@ namespace GathererDBMaker
 {
     class Program
     {
+        static Boolean incLegality = false;
+        static string DBPath = null;
+
         static string mkDatabase()
         {
             try
             {
+ 
                 Console.WriteLine("Enter the path/name for the new database. \nExample: C:\\Users\\w9jds\\Desktop\\GathererDB.mdb");
                 string input = Console.ReadLine();
 
                 ADOX.Catalog CreateDB = new ADOX.Catalog();
+                
                 ADOX.Table CardTable = new ADOX.Table();
-                ADOX.Table Legality = new ADOX.Table();
-
                 CardTable.Name = "Cards";
                 CardTable.Columns.Append("MultiverseID");
                 CardTable.Columns.Append("Name");
@@ -34,14 +37,27 @@ namespace GathererDBMaker
                 CardTable.Columns.Append("Rarity");
                 CardTable.Columns.Append("ImgURL");
 
-                Legality.Name = "CardsLegality";
-                Legality.Columns.Append("MultiverseID");
-                Legality.Columns.Append("Format");
-                Legality.Columns.Append("Legality");
-
                 CreateDB.Create("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" + input + "; Jet OLEDB:Engine Type=5");
                 CreateDB.Tables.Append(CardTable);
-                CreateDB.Tables.Append(Legality);
+
+                ask: Console.WriteLine("Would you like to add card legalities to the database? (Will add A LOT of time to runtime.) y/n");
+                string leginput = Console.ReadLine();
+                if (string.Equals(leginput, "y", StringComparison.OrdinalIgnoreCase) == true || string.Equals(leginput, "yes", StringComparison.OrdinalIgnoreCase))
+                    incLegality = true;
+                else if (string.Equals(leginput, "n", StringComparison.OrdinalIgnoreCase) == true || string.Equals(leginput, "no", StringComparison.OrdinalIgnoreCase))
+                    incLegality = false;
+                else
+                    goto ask;
+
+                if (incLegality == true)
+                {
+                    ADOX.Table Legality = new ADOX.Table();
+                    Legality.Name = "CardsLegality";
+                    Legality.Columns.Append("MultiverseID");
+                    Legality.Columns.Append("Format");
+                    Legality.Columns.Append("Legality");
+                    CreateDB.Tables.Append(Legality);
+                }
 
                 OleDbConnection DBcon = CreateDB.ActiveConnection as OleDbConnection;
                 if (DBcon != null)
@@ -59,6 +75,8 @@ namespace GathererDBMaker
 
             if (input == null)
                 goto begin;
+            else
+                DBPath = input;
 
             for (int i = 1; i <= 1500; i++)
             {
@@ -67,12 +85,12 @@ namespace GathererDBMaker
                 using (StreamReader reader = new StreamReader(request.GetResponse().GetResponseStream()))
                 {
                     string source = reader.ReadToEnd();
-                    getInfo(source, i, input); 
+                    getInfo(source, i); 
                 }
             }
         }
         
-        static void getInfo(string source, int i, string DBPath)
+        static void getInfo(string source, int i)
         {
             if (source.Contains("id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardImage\""))
             {
@@ -152,16 +170,61 @@ namespace GathererDBMaker
                 {
                     expansion = name.Substring(name.IndexOf("(")+1, (name.IndexOf(")") - name.IndexOf("("))-1);
                     name = name.Substring(0, name.IndexOf("("));
-                    name.Trim();
+                    name = name.Trim();
                 }
 
-                saveCard(DBPath, multiverseid, name, convmanacost, type, cardtext, power, toughness, expansion, rarity, imgurl);
+                saveCard(multiverseid, name, convmanacost, type, cardtext, power, toughness, expansion, rarity, imgurl);
+                if (incLegality == true)
+                    getLegalitySource(multiverseid);
 
                 Console.WriteLine(name + "was added to the database.");
             }
         }
-        
-        static void saveCard(string DBPath, int multiverseid, string name, string convmanacost, string type, string cardtext, string power, string toughness, string expansion, string rarity, string imgurl)
+
+        static void getLegalitySource(int multiversid)
+        {
+            WebRequest request = HttpWebRequest.Create("http://gatherer.wizards.com/Pages/Card/Printings.aspx?multiverseid=" + multiversid);
+            request.Method = "GET";
+            using (StreamReader reader = new StreamReader(request.GetResponse().GetResponseStream()))
+            {
+                string source = reader.ReadToEnd();
+                getLegality(multiversid, source);
+            }
+        }
+
+        static void getLegality(int multiversid, string source)
+        {
+            string legacy = null;
+            List<string> formats = new List<string>();
+            List<string> legalities = new List<string>();
+
+            int tablestart = source.IndexOf("<table class=\"cardList\" cellspacing=\"0\" cellpadding=\"2\">") + 1;
+            legacy = source.Substring(tablestart, (source.Length - tablestart));
+            tablestart = legacy.IndexOf("<table class=\"cardList\" cellspacing=\"0\" cellpadding=\"2\">");
+            int tableend = legacy.IndexOf("</table>", tablestart);
+            legacy = legacy.Substring(tablestart, (tableend - tablestart));
+            string[] legacysplit = legacy.Split(new string[] { "<tr class=\"cardItem evenItem\">", "<tr class=\"cardItem oddItem\">" }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 1; i < legacysplit.Length; i++)
+            {
+                string[] split = legacysplit[i].Split(new string[] { "<td style=\"width:40%;\">", "<td style=\"text-align:center;\">", "<td>" }, StringSplitOptions.RemoveEmptyEntries);                int end = split[1].IndexOf("</td>");
+                string format = split[1].Substring(0, end);
+                format = format.Replace("\n", string.Empty);
+                format = format.Replace("\r", string.Empty);
+                format = format.Replace("\t", string.Empty);
+                format = format.Trim();
+                formats.Add(format);
+                end = split[2].IndexOf("</td>");
+                string legality = split[2].Substring(0, end);
+                legality = legality.Replace("\n", string.Empty);
+                legality = legality.Replace("\r", string.Empty);
+                legality = legality.Replace("\t", string.Empty);
+                legality = legality.Trim();
+                legalities.Add(legality);
+            }
+            saveLegality(multiversid, formats, legalities);
+        }
+
+        static void saveCard(int multiverseid, string name, string convmanacost, string type, string cardtext, string power, string toughness, string expansion, string rarity, string imgurl)
         {
             OleDbConnection DBcon = new OleDbConnection(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + DBPath);
             DBcon.Open(); //opens OLEBD connection to Database
@@ -183,11 +246,23 @@ namespace GathererDBMaker
             DBcon.Close();
         }
 
-        public void saveLegality()
+        static void saveLegality(int multiverseid, List<string> formats, List<string> legalities)
         {
-
+            for (int i = 0; i < formats.Count(); i++)
+            {
+                OleDbConnection DBcon = new OleDbConnection(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + DBPath);
+                DBcon.Open(); //opens OLEBD connection to Database
+                OleDbCommand cmd = new OleDbCommand();
+                cmd.CommandText = "INSERT INTO CardsLegality([MultiverseID], [Format], [Legality]) VALUES (@MultiverseID, @Format, @Legality)";
+                //Adds a new card and all the information for it to the CardTable
+                cmd.Parameters.Add("@MultiverseID", OleDbType.VarChar).Value = multiverseid;
+                cmd.Parameters.Add("@Format", OleDbType.VarChar).Value = formats[i];
+                cmd.Parameters.Add("@Legality", OleDbType.VarChar).Value = legalities[i];
+                cmd.Connection = DBcon;
+                cmd.ExecuteNonQuery();
+                DBcon.Close();
+            }
         }
     }
-
 
 }
