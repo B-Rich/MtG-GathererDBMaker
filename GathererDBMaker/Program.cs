@@ -13,14 +13,24 @@ namespace GathererDBMaker
     {
         static Boolean incLegality = false;
         static string DBPath = null;
+        static int multiverseidstart = 1;
+        static int multiverseidend = 0;
 
         static string mkDatabase()
         {
             try
             {
- 
                 Console.WriteLine("Enter the path/name for the new database. \nExample: C:\\Users\\w9jds\\Desktop\\GathererDB.mdb");
                 string input = Console.ReadLine();
+
+                do {
+                    try {
+                        Console.WriteLine("What multiverseid would you like to start with?");
+                        multiverseidstart = Convert.ToInt32(Console.ReadLine());
+                        Console.WriteLine("What multiverseid would you like to end with?");
+                        multiverseidend = Convert.ToInt32(Console.ReadLine());
+                    } catch (Exception) { multiverseidend = 0; multiverseidstart = 1; }
+                } while (multiverseidstart > multiverseidend);
 
                 ADOX.Catalog CreateDB = new ADOX.Catalog();
                 
@@ -78,7 +88,7 @@ namespace GathererDBMaker
             else
                 DBPath = input;
 
-            for (int i = 1; i <= 1500; i++)
+            for (int i = multiverseidstart; i <= multiverseidend; i++)
             {
                 WebRequest request = HttpWebRequest.Create("http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=" + i);
                 request.Method = "GET";
@@ -206,7 +216,8 @@ namespace GathererDBMaker
             string[] legacysplit = legacy.Split(new string[] { "<tr class=\"cardItem evenItem\">", "<tr class=\"cardItem oddItem\">" }, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 1; i < legacysplit.Length; i++)
             {
-                string[] split = legacysplit[i].Split(new string[] { "<td style=\"width:40%;\">", "<td style=\"text-align:center;\">", "<td>" }, StringSplitOptions.RemoveEmptyEntries);                int end = split[1].IndexOf("</td>");
+                string[] split = legacysplit[i].Split(new string[] { "<td style=\"width:40%;\">", "<td style=\"text-align:center;\">", "<td>" }, StringSplitOptions.RemoveEmptyEntries);
+                int end = split[1].IndexOf("</td>");
                 string format = split[1].Substring(0, end);
                 format = format.Replace("\n", string.Empty);
                 format = format.Replace("\r", string.Empty);
@@ -264,5 +275,4 @@ namespace GathererDBMaker
             }
         }
     }
-
 }
