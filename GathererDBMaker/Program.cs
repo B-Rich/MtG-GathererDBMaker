@@ -90,21 +90,32 @@ namespace GathererDBMaker
 
             for (int i = multiverseidstart; i <= multiverseidend; i++)
             {
-                //72681
+                //86315
+                bool lang;
                 var request = (HttpWebRequest)WebRequest.Create("http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=" + i);
+                var langrequest = (HttpWebRequest)WebRequest.Create("http://gatherer.wizards.com/Pages/Card/Languages.aspx?multiverseid=" + i);
                 request.AllowAutoRedirect = false;
                 var httpRes = (HttpWebResponse)request.GetResponse();
                 if (httpRes.StatusDescription.Equals("Found") == false)
                 {
-                    //request.Method = "GET";
-                    using (StreamReader reader = new StreamReader(httpRes.GetResponseStream()))
+                    using (StreamReader langreader = new StreamReader(langrequest.GetResponse().GetResponseStream()))
                     {
-                        string source = reader.ReadToEnd();
-                        if (source.Contains("id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardImage\"") == true)
-                            getInfo(source, i);
-                        else
-                            Console.WriteLine(i + " was skipped.");
+                        string langsource = langreader.ReadToEnd();
+                        lang = langsource.Contains("English");
                     }
+                    if (lang == false)
+                    {
+                        using (StreamReader reader = new StreamReader(httpRes.GetResponseStream()))
+                        {
+                            string source = reader.ReadToEnd();
+                            if (source.Contains("id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardImage\"") == true)
+                                getInfo(source, i);
+                            else
+                                Console.WriteLine(i + " was skipped.");
+                        }
+                    }
+                    else
+                        Console.WriteLine(i + " was skipped.");
                 }
                 
                 else
@@ -198,7 +209,7 @@ namespace GathererDBMaker
             if (incLegality == true)
                 getLegalitySource(multiverseid);
 
-            Console.WriteLine(multiverseid + " was added to the database.");
+            Console.WriteLine(multiverseid + " (" + name + ") was added to the database.");
         }
 
         static void getLegalitySource(int multiversid)
