@@ -197,6 +197,9 @@ namespace GathererDBMaker
             rarity = rarity.Substring(rarity.IndexOf("'>") + 2, (rarity.Length - rarity.IndexOf("'>")) - 2);
             rarity = rarity.Trim();
 
+            if (rarity.Contains("/>") == true)
+                rarity = "";
+
             //If the title contains parenthesis it cuts it out and puts what was inside into expansion
             if (name.Contains("(") == true)
             {
@@ -258,24 +261,28 @@ namespace GathererDBMaker
 
         static void saveCard(int multiverseid, string name, string convmanacost, string type, string cardtext, string power, string toughness, string expansion, string rarity, string imgurl)
         {
-            OleDbConnection DBcon = new OleDbConnection(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + DBPath);
-            DBcon.Open(); //opens OLEBD connection to Database
-            OleDbCommand cmd = new OleDbCommand();
-            cmd.CommandText = "INSERT INTO Cards([MultiverseID], [Name], [ConvManaCost], [Type], [CardText], [Power], [Toughness], [Expansion], [Rarity], [ImgURL]) VALUES (@MultiverseID, @Name, @ConvManaCost, @Type, @CardText, @Power, @Toughness, @Expansion, @Rarity, @ImgURL)";
-            //Adds a new card and all the information for it to the CardTable
-            cmd.Parameters.Add("@MultiverseID", OleDbType.VarChar).Value = multiverseid;
-            cmd.Parameters.Add("@Name", OleDbType.VarChar).Value = name;
-            cmd.Parameters.Add("@ConvManaCost", OleDbType.VarChar).Value = convmanacost;
-            cmd.Parameters.Add("@Type", OleDbType.VarChar).Value = type;
-            cmd.Parameters.Add("@CardText", OleDbType.VarChar).Value = cardtext;
-            cmd.Parameters.Add("@Power", OleDbType.VarChar).Value = power;
-            cmd.Parameters.Add("@Toughness", OleDbType.VarChar).Value = toughness;
-            cmd.Parameters.Add("@Expansion", OleDbType.VarChar).Value = expansion;
-            cmd.Parameters.Add("@Rarity", OleDbType.VarChar).Value = rarity;
-            cmd.Parameters.Add("@ImgURL", OleDbType.VarChar).Value = imgurl;
-            cmd.Connection = DBcon;
-            cmd.ExecuteNonQuery();
-            DBcon.Close();
+            //try
+            //{
+                OleDbConnection DBcon = new OleDbConnection(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + DBPath);
+                DBcon.Open(); //opens OLEBD connection to Database
+                OleDbCommand cmd = new OleDbCommand();
+                cmd.CommandText = "INSERT INTO Cards([MultiverseID], [Name], [ConvManaCost], [Type], [CardText], [Power], [Toughness], [Expansion], [Rarity], [ImgURL]) VALUES (@MultiverseID, @Name, @ConvManaCost, @Type, @CardText, @Power, @Toughness, @Expansion, @Rarity, @ImgURL)";
+                //Adds a new card and all the information for it to the CardTable
+                cmd.Parameters.Add("@MultiverseID", OleDbType.Integer).Value = multiverseid;
+                cmd.Parameters.Add("@Name", OleDbType.VarChar).Value = name;
+                cmd.Parameters.Add("@ConvManaCost", OleDbType.VarChar).Value = convmanacost;
+                cmd.Parameters.Add("@Type", OleDbType.VarChar).Value = type;
+                cmd.Parameters.Add("@CardText", OleDbType.VarChar).Value = cardtext;
+                cmd.Parameters.Add("@Power", OleDbType.VarChar).Value = power;
+                cmd.Parameters.Add("@Toughness", OleDbType.VarChar).Value = toughness;
+                cmd.Parameters.Add("@Expansion", OleDbType.VarChar).Value = expansion;
+                cmd.Parameters.Add("@Rarity", OleDbType.VarChar).Value = rarity;
+                cmd.Parameters.Add("@ImgURL", OleDbType.VarChar).Value = imgurl;
+                cmd.Connection = DBcon;
+                cmd.ExecuteNonQuery();
+                DBcon.Close();
+            //}
+            //catch (Exception) { };
         }
 
         static void saveLegality(int multiverseid, List<string> formats, List<string> legalities)
