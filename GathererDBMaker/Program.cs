@@ -90,15 +90,14 @@ namespace GathererDBMaker
 
             for (int i = multiverseidstart; i <= multiverseidend; i++)
             {
-                //53740
+                //72681
                 var request = (HttpWebRequest)WebRequest.Create("http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=" + i);
                 request.AllowAutoRedirect = false;
                 var httpRes = (HttpWebResponse)request.GetResponse();
-                httpRes.Close();
                 if (httpRes.StatusDescription.Equals("Found") == false)
                 {
-                    request.Method = "GET";
-                    using (StreamReader reader = new StreamReader(request.GetResponse().GetResponseStream()))
+                    //request.Method = "GET";
+                    using (StreamReader reader = new StreamReader(httpRes.GetResponseStream()))
                     {
                         string source = reader.ReadToEnd();
                         if (source.Contains("id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardImage\"") == true)
@@ -107,8 +106,10 @@ namespace GathererDBMaker
                             Console.WriteLine(i + " was skipped.");
                     }
                 }
+                
                 else
                     Console.WriteLine(i + " was skipped.");
+                httpRes.Close();
             }
         }
         
