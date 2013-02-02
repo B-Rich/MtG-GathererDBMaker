@@ -90,16 +90,25 @@ namespace GathererDBMaker
 
             for (int i = multiverseidstart; i <= multiverseidend; i++)
             {
-                WebRequest request = HttpWebRequest.Create("http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=" + i);
-                request.Method = "GET";
-                using (StreamReader reader = new StreamReader(request.GetResponse().GetResponseStream()))
+                //53740
+                var request = (HttpWebRequest)WebRequest.Create("http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=" + i);
+                request.AllowAutoRedirect = false;
+                var httpRes = (HttpWebResponse)request.GetResponse();
+                httpRes.Close();
+                if (httpRes.StatusDescription.Equals("Found") == false)
                 {
-                    string source = reader.ReadToEnd();
-                    if (source.Contains("id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardImage\"") == true)
+                    request.Method = "GET";
+                    using (StreamReader reader = new StreamReader(request.GetResponse().GetResponseStream()))
                     {
-                        getInfo(source, i);
+                        string source = reader.ReadToEnd();
+                        if (source.Contains("id=\"ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardImage\"") == true)
+                            getInfo(source, i);
+                        else
+                            Console.WriteLine(i + " was skipped.");
                     }
                 }
+                else
+                    Console.WriteLine(i + " was skipped.");
             }
         }
         
@@ -188,7 +197,7 @@ namespace GathererDBMaker
             if (incLegality == true)
                 getLegalitySource(multiverseid);
 
-            Console.WriteLine(name + " was added to the database.");
+            Console.WriteLine(multiverseid + " was added to the database.");
         }
 
         static void getLegalitySource(int multiversid)
