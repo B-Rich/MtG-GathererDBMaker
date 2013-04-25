@@ -1,0 +1,8 @@
+C:\Users\Jeremy\Documents\GitHub\MtG-GathererDBMaker\GathererDBMaker\bin\Release\GathererDBMaker.exe.config
+C:\Users\Jeremy\Documents\GitHub\MtG-GathererDBMaker\GathererDBMaker\obj\Release\Interop.ADOX.dll
+C:\Users\Jeremy\Documents\GitHub\MtG-GathererDBMaker\GathererDBMaker\obj\Release\GathererDBMaker.csproj.ResolveComReference.cache
+C:\Users\Jeremy\Documents\GitHub\MtG-GathererDBMaker\GathererDBMaker\obj\Release\GathererDBMaker.csprojResolveAssemblyReference.cache
+C:\Users\Jeremy\Documents\GitHub\MtG-GathererDBMaker\GathererDBMaker\bin\Release\GathererDBMaker.exe
+C:\Users\Jeremy\Documents\GitHub\MtG-GathererDBMaker\GathererDBMaker\bin\Release\GathererDBMaker.pdb
+C:\Users\Jeremy\Documents\GitHub\MtG-GathererDBMaker\GathererDBMaker\obj\Release\GathererDBMaker.exe
+C:\Users\Jeremy\Documents\GitHub\MtG-GathererDBMaker\GathererDBMaker\obj\Release\GathererDBMaker.pdb
