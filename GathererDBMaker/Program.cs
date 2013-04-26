@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace GathererDBMaker
@@ -16,6 +17,10 @@ namespace GathererDBMaker
         private static int multiverseidstart = 1;
         private static int multiverseidend = 0;
         
+        /// <summary>
+        /// Main
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
             begin: string input = mkDatabase();
@@ -31,6 +36,10 @@ namespace GathererDBMaker
             }
         }
 
+        /// <summary>
+        /// Creates a new database and sets how many cards this is going to pull from Gatherer
+        /// </summary>
+        /// <returns></returns>
         static string mkDatabase()
         {
             try
@@ -96,7 +105,14 @@ namespace GathererDBMaker
             catch (OleDbException) { Console.WriteLine("Entered Invalid Path"); return null; }
             catch (Exception) { Console.WriteLine("\nAn error has occured while making the Database"); return null; }
         }
-        
+
+
+
+        /// <summary>
+        /// Gets all the information for one card.
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
         private static async Task getInfo(int i)
         {
             bool lang, WasSkipped;
@@ -111,9 +127,15 @@ namespace GathererDBMaker
                 {
                     string langsource = langreader.ReadToEnd();
                     lang = langsource.Contains("English");
+
+                    if (lang == false && langsource.Contains("class=\"pagingControls\"") == true)
+                    {
+                        CheckLang(langsource, ref lang, i);
+                    }
                 }
                 if (lang == false)
                 {
+
                     using (StreamReader reader = new StreamReader(httpRes.GetResponseStream()))
                     {
                         source = reader.ReadToEnd();
@@ -123,6 +145,8 @@ namespace GathererDBMaker
                         {
                             Console.WriteLine(i + " was skipped.");
                             WasSkipped = true;
+                            //class="pagingControls"
+
                         }
                     }
                 }
@@ -226,6 +250,39 @@ namespace GathererDBMaker
             }
         }
 
+        /// <summary>
+        /// If the first page of languages didn't have english listed and there are other pages this checks the other pages to see if the card is in english.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="lang"></param>
+        private static void CheckLang(string source, ref bool lang, int i)
+        {
+
+            int pagestart = source.IndexOf("class=\"pagingControls\"");
+            int pageend = source.IndexOf("</div>", pagestart);
+
+            string page = source.Substring(pagestart, (pageend - pagestart));
+            string[] pages = Regex.Split(page, "<a href=\"");
+            for (int j = 0; j < pages.Length; j++)
+            {
+                if (pages[j].Contains("</a>") == true)
+                {
+                    var langrequest = (HttpWebRequest)WebRequest.Create("http://gatherer.wizards.com/Pages/Card/Languages.aspx?page=" + pages[j].Substring(pages[j].IndexOf(">") + 1, 1) + "&multiverseid=" + i);
+                    using (StreamReader langreader = new StreamReader(langrequest.GetResponse().GetResponseStream()))
+                    {
+                        string langsource = langreader.ReadToEnd();
+                        if (langsource.Contains("English") == true)
+                        {
+                            lang = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+
+
         //static void getLegalitySource(int multiversid)
         //{
         //    WebRequest request = HttpWebRequest.Create("http://gatherer.wizards.com/Pages/Card/Printings.aspx?multiverseid=" + multiversid);
@@ -270,6 +327,13 @@ namespace GathererDBMaker
         //    saveLegality(multiversid, formats, legalities);
         //}
 
+
+
+        /// <summary>
+        /// Takes all the information for this one card and stores it as a new card in the database.
+        /// </summary>
+        /// <param name="Card"></param>
+        /// <returns></returns>
         private static async Task saveCard(Classes.CardInfo Card)
         {
 
@@ -309,8 +373,6 @@ namespace GathererDBMaker
                 Console.WriteLine(Card.multiverseid + " (" + Card.name + ") was added to the database.");
             }
             catch (Exception) { Console.WriteLine(Card.name + " was skipped"); };
-
-
         }
 
         //static void saveLegality(int multiverseid, List<string> formats, List<string> legalities)
