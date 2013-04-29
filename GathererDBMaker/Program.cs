@@ -13,6 +13,7 @@ namespace GathererDBMaker
     class Program
     {
         private static Boolean incLegality = false;
+        private static Boolean lang = false;
         private static string DBPath = null;
         private static int multiverseidstart = 1;
         private static int multiverseidend = 0;
@@ -115,7 +116,7 @@ namespace GathererDBMaker
         /// <returns></returns>
         private static async Task getInfo(int i)
         {
-            bool lang, WasSkipped;
+            bool WasSkipped;
             string source = null;
             var request = (HttpWebRequest)WebRequest.Create("http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=" + i);
             var langrequest = (HttpWebRequest)WebRequest.Create("http://gatherer.wizards.com/Pages/Card/Languages.aspx?multiverseid=" + i);
@@ -130,7 +131,7 @@ namespace GathererDBMaker
 
                     if (lang == false && langsource.Contains("class=\"pagingControls\"") == true)
                     {
-                        CheckLang(langsource, ref lang, i);
+                        CheckLang(langsource, i);
                     }
                 }
                 if (lang == false)
@@ -255,9 +256,8 @@ namespace GathererDBMaker
         /// </summary>
         /// <param name="source"></param>
         /// <param name="lang"></param>
-        private static void CheckLang(string source, ref bool lang, int i)
+        private static async Task CheckLang(string source, int i)
         {
-
             int pagestart = source.IndexOf("class=\"pagingControls\"");
             int pageend = source.IndexOf("</div>", pagestart);
 

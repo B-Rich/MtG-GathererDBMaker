@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("GathererDBMaker")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Gatherer Database Maker")]
+[assembly: AssemblyDescription("Creates a database by pulling all card information directly from the Magic the Gathering Gatherer Website")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("GathererDBMaker")]
+[assembly: AssemblyProduct("Gatherer Database Maker")]
 [assembly: AssemblyCopyright("Copyright ©  2013")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTrademark("Created by w9jds")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
